@@ -1,7 +1,9 @@
+import urllib
 from urllib.request import urlopen  #the library for url acesss
 import re #regular expressions
 from bs4 import BeautifulSoup
-front_page_pdb = 'https://www.rcsb.org/'  #home page of the protein data bank
+import mechanicalsoup        #basically is a headless browser that works with python
+front_page_pdb = 'https://www.rcsb.org/'  #advanced search page
 
 #open page
 #the main html parse method i three steps
@@ -38,9 +40,34 @@ search = match_results.group()  #carefull this results in errors if object ends 
 
 soup = BeautifulSoup(html, "html.parser")  #html parser s built into python by default
 #print(soup.get_text())  #strangely this results in an unsupported browser message?
-print(soup.title.string)     #retunrs title with tags unsless you use .string
+#print(soup.get_text)     
 #find all img tags, using findall on the results of the soup object
 images = soup.find_all("img")
 #print(images)
-print(images[3].name)  #retuns type of tag
-print(images[1]["src"])#source of image
+#print(images[3].name)  #retuns type of tag
+#print(images[1]["src"])#source of image
+
+
+#soup doesent help much with forms; which is actually what we want from pdb!
+#using the mechanical soup browser
+
+browser = mechanicalsoup.Browser()
+page = browser.get(front_page_pdb)
+print(page)  #page is a Response type object! 200 is the sucess ok state 
+
+# note mechanical soup uses beautifoul soup to parse html and is infacte an upgrade on top of it: page has a soup attribute
+#print(page.soup)
+
+#using a form
+
+search_html = page.soup
+#forms = search_html.select('div[id="search-bar-component"]')  #doesent work
+forms = search_html.select('form')
+print(forms)
+form = forms[0]
+print(form)
+form["value"] = "1N5U"
+
+next_page = browser.submit(form, page.url)
+print(next_page.url)
+print(next_page.soup)
