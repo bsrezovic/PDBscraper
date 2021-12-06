@@ -62,12 +62,10 @@ print(page)  #page is a Response type object! 200 is the sucess ok state
 
 search_html = page.soup
 #forms = search_html.select('div[id="search-bar-component"]')  #doesent work
-forms = search_html.select('form')
-print(forms)
-form = forms[0]
-print(form)
-form["value"] = "1N5U"
+#forms = search_html.select('form')
 
-next_page = browser.submit(form, page.url)
-print(next_page.url)
-print(next_page.soup)
+#form = forms[0]
+
+#form["value"] = "1N5U"
+
+#next_page = browser.submit(form, page.url)
