@@ -17,7 +17,6 @@ title_index = html.find("<title>")
 start_index = title_index + len("<title>")
 end_index = html.find("</title>")
 title = html[start_index:end_index]
-print(title)
 
 #this method is less reliable then regular expressions, for example people might render title as <title > with a space or class, rendering this usless
 #but is useful for us since were scrapping the same page constantly here. will user regex tho if we have to scrap into the PDB entry descriptions, which can be less uniform
