@@ -4,12 +4,12 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # or any {'0', '1', '2'}
 import tensorflow as tf
 import matplotlib.pyplot as plt
-from six.moves import urllib
+#from six.moves import urllib
 import numpy as np
 import pandas as pd
 import sklearn
 from IPython.display import clear_output
-import tensorflow.compat.v2.feature_column as fc
+#import tensorflow.compat.v2.feature_column as fc
 
 test_tensor1 = tf.Variable(24,tf.int16)
 test_tensor2 = tf.Variable([24,25],tf.int16)
@@ -44,16 +44,16 @@ print(tensor4)
 dftrain = pd.read_csv('https://storage.googleapis.com/tf-datasets/titanic/train.csv') # training data
 dfeval = pd.read_csv('https://storage.googleapis.com/tf-datasets/titanic/eval.csv') # testing data
 
-print(dftrain.head())
+#print(dftrain.head())
 y_train = dftrain.pop('survived')  #pop out the columns from the dataset and assign them to variable
 y_eval = dfeval.pop('survived')
 
-print(dftrain.loc[0:2])  #how subsetting works, the "normal syntax" (df[] can be used to find columns by name!)
+#print(dftrain.loc[0:2])  #how subsetting works, the "normal syntax" (df[] can be used to find columns by name!)
 print("------------------------------------------------")
 #you can get some stats using .describe
 
-print(dftrain.describe())
-print(dftrain.shape)
+#print(dftrain.describe())
+#print(dftrain.shape)
 
 #make some graphs using plt.show!
 #dftrain.age.hist(bins = 20)
@@ -88,12 +88,33 @@ for feature_name in NUMERIC_COLUMNS:
 #Model building
 
 #the values are fed int the mdel in batches, because if we have to much data maybe we cant fit it into RAM all at once
-# To do that we steal the input fucnction from tensorflow website
+# To do that we steal the input function from tensorflow website
+
+def make_input_fn(data_df, label_df, num_epochs=10, shuffle=True, batch_size=32):
+  def input_function():  # inner function, this will be returned
+    ds = tf.data.Dataset.from_tensor_slices((dict(data_df), label_df))  # create tf.data.Dataset object with data and its label
+    if shuffle:
+      ds = ds.shuffle(1000)  # randomize order of data
+    ds = ds.batch(batch_size).repeat(num_epochs)  # split dataset into batches of 32 and repeat process for number of epochs
+    return ds  # return a batch of the dataset
+  return input_function  # return a function object for use
+
+train_input_fn = make_input_fn(dftrain, y_train)  # here we will call the input_function that was returned to us to get a dataset object we can feed to the model
+eval_input_fn = make_input_fn(dfeval, y_eval, num_epochs=1, shuffle=False)   #epoch == 1 for training ofc
 
 
+#linear regression
+linear_est = tf.estimator.LinearClassifier(feature_columns=feature_columns)  # creates the estimator
+
+linear_est.train(train_input_fn)  # input the training tf dataset into the estimator using the input function
+result = linear_est.evaluate(eval_input_fn)  # get model metrics/stats by testing on testing data
 
 
-
+print(result['accuracy'])  # the result variable is simply a dict of stats about our model
+#getting the actual predictions from the model is easy
+predictions = list(linear_est.predict(eval_input_fn))  #made it a list so we can loop through it easily
+print(dfeval.loc[0])  #first person
+print(predictions[0]["probabilities"][1]) #first persons survival probability
 
 
 #plt.show()  #opens in a new window, have this on the end or commented out because it stops executon until you close the graph
